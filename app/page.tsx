@@ -34,11 +34,32 @@ export default async function Home() {
     <main className="min-h-screen">
       <header className="border-b border-stone-300/70 bg-stone-900 text-stone-100">
         <div className="mx-auto max-w-6xl px-5 py-8">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-2xl font-black tracking-tight">DIGGING</h1>
-            <span className="text-xs uppercase tracking-[0.2em] text-amber-400/90">
-              RRL price radar
-            </span>
+          <div className="flex items-center gap-3">
+            <svg
+              viewBox="0 0 100 100"
+              className="h-12 w-12 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M28.6 68 A28 28 0 1 1 71.4 68"
+                fill="none"
+                stroke="#f0e6d2"
+                strokeWidth="13"
+                strokeLinecap="round"
+              />
+              <path
+                d="M50,33 L52.94,41.95 L62.4,42 L54.76,47.55 L57.6,56.5 L50,51 L42.4,56.5 L45.24,47.55 L37.6,42 L47.06,41.95 Z"
+                fill="#cf9f4a"
+              />
+            </svg>
+            <div>
+              <h1 className="font-serif text-2xl font-bold tracking-wide">
+                LEE&apos;S RANCH
+              </h1>
+              <span className="text-[11px] uppercase tracking-[0.2em] text-amber-400/90">
+                Americana · RRL price radar
+              </span>
+            </div>
           </div>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-300">
             Double RL(RRL) 상품을{" "}
