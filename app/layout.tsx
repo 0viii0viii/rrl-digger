@@ -56,6 +56,9 @@ export const metadata: Metadata = {
   category: "shopping",
   verification: {
     google: "K7k5ZLBm4BO8nGVGPVFPPOmGL2lGvCg2P2brRU0ihRk",
+    other: {
+      "naver-site-verification": "95c79eb9eac53ec8802f405e115a090adb81be4e",
+    },
   },
 };
 
