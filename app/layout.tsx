@@ -54,6 +54,9 @@ export const metadata: Metadata = {
     },
   },
   category: "shopping",
+  verification: {
+    google: "K7k5ZLBm4BO8nGVGPVFPPOmGL2lGvCg2P2brRU0ihRk",
+  },
 };
 
 const jsonLd = {
