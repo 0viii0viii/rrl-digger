@@ -1,0 +1,23 @@
+# Free alternative to Vercel Cron — runs the full sync every 12h on GitHub's
+# runners (no serverless timeout limits). Enable by pushing to GitHub and
+# adding repo secrets: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+name: sync-rrl
+
+on:
+  schedule:
+    - cron: "0 0,12 * * *" # 00:00 and 12:00 UTC (every 12h)
+  workflow_dispatch: {} # allow manual run from the Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: node scripts/sync.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
