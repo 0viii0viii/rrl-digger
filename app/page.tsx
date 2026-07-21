@@ -70,8 +70,9 @@ export default async function Home() {
         </p>
         <p>
           관세는 <b>자가사용 직구 추정치</b>입니다 — 의류 관세 13% + 부가세 10%,
-          면세 한도 미국(Stag) $200 / 기타(Cultizm) $150, 배송비는 가정값(Stag
-          $50 · Cultizm ~€25). HS코드·실제 배송비에 따라 달라져요.
+          면세 한도 미국(Stag) $200 / 기타(Cultizm) $150. 배송비는 Stag $50 정액,
+          Cultizm은 무게 기반 추정(€25~, DHL/UPS). HS코드·실제 배송비에 따라
+          달라져요.
         </p>
         <p>가격·재고는 각 편집샵 피드 기준 · 구매 전 원 사이트에서 확인하세요.</p>
       </footer>

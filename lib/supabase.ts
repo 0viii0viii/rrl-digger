@@ -30,6 +30,7 @@ export type Product = {
   compare_at_price: number | null;
   price_export: number | null;
   price_krw: number | null;
+  grams: number | null;
   available: boolean;
   variants: Variant[] | null;
   tags: string[] | null;

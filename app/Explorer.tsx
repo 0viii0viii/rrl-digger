@@ -180,7 +180,7 @@ function Card({
   const store = STORE_META[p.source];
   const landed =
     p.price_krw != null
-      ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur)
+      ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur, p.grams ?? 0)
       : null;
   const onSale =
     p.compare_at_price != null && p.price != null && p.compare_at_price > p.price;
@@ -274,6 +274,7 @@ function Card({
                 <span className="text-stone-400">
                   {" · 배송 ~"}
                   {krw(landed.shipping)}
+                  {p.grams ? ` (${p.grams}g)` : ""}
                 </span>
               </div>
               <div className="font-semibold text-stone-700">
