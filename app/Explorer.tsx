@@ -262,19 +262,23 @@ function Card({
             )}
           </div>
           {landed && (
-            <div className="mt-1 text-[10px] leading-tight">
-              {landed.taxFree ? (
-                <span className="font-semibold text-emerald-700">
-                  ✓ 면세 예상 (${landed.thresholdUSD} 이하)
-                </span>
-              ) : (
-                <span className="text-stone-500">
-                  +관세·부가세 ~{krw(landed.tax)}
-                  <span className="text-stone-400">
-                    {" · "}도착가 ~{krw(landed.total)}
+            <div className="mt-1 space-y-0.5 text-[10px] leading-tight text-stone-500">
+              <div>
+                {landed.taxFree ? (
+                  <span className="font-semibold text-emerald-700">
+                    ✓ 면세 (${landed.thresholdUSD} 이하)
                   </span>
+                ) : (
+                  <span>관세·부가세 ~{krw(landed.tax)}</span>
+                )}
+                <span className="text-stone-400">
+                  {" · 배송 ~"}
+                  {krw(landed.shipping)}
                 </span>
-              )}
+              </div>
+              <div className="font-semibold text-stone-700">
+                도착가 ~{krw(landed.total)}
+              </div>
             </div>
           )}
         </div>
