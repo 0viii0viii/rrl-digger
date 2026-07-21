@@ -7,6 +7,17 @@ import { estimateLanded } from "@/lib/customs";
 
 type SortKey = "price_asc" | "price_desc" | "title";
 
+// Apply a Cultizm coupon (%) to a KRW price. Only affects Cultizm items.
+function couponedKrw(
+  krw: number | null,
+  src: string,
+  pct: number,
+): number | null {
+  if (krw == null) return null;
+  const f = src === "cultizm" && pct > 0 ? 1 - pct / 100 : 1;
+  return Math.round(krw * f);
+}
+
 export default function Explorer({
   products,
   lastUpdated,
@@ -23,6 +34,8 @@ export default function Explorer({
   const [inStockOnly, setInStockOnly] = useState(true);
   const [onlyComparable, setOnlyComparable] = useState(false);
   const [sort, setSort] = useState<SortKey>("price_asc");
+  const [coupon, setCoupon] = useState(0);
+  const couponPct = Math.min(90, Math.max(0, coupon));
 
   // Group by fuzzy match key to detect items carried by BOTH stores.
   const { comparableKeys, cheaperByKey } = useMemo(() => {
@@ -41,14 +54,17 @@ export default function Explorer({
         const withPrice = list.filter((p) => p.price_krw != null);
         if (withPrice.length) {
           const cheapest = withPrice.reduce((a, b) =>
-            (a.price_krw ?? Infinity) <= (b.price_krw ?? Infinity) ? a : b,
+            (couponedKrw(a.price_krw, a.source, couponPct) ?? Infinity) <=
+            (couponedKrw(b.price_krw, b.source, couponPct) ?? Infinity)
+              ? a
+              : b,
           );
           cheaperByKey.set(k, cheapest.id);
         }
       }
     }
     return { comparableKeys, cheaperByKey };
-  }, [products]);
+  }, [products, couponPct]);
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -61,12 +77,21 @@ export default function Explorer({
     });
     list = [...list].sort((a, b) => {
       if (sort === "title") return a.title.localeCompare(b.title);
-      const av = a.price_krw ?? Infinity;
-      const bv = b.price_krw ?? Infinity;
+      const av = couponedKrw(a.price_krw, a.source, couponPct) ?? Infinity;
+      const bv = couponedKrw(b.price_krw, b.source, couponPct) ?? Infinity;
       return sort === "price_asc" ? av - bv : bv - av;
     });
     return list;
-  }, [products, q, source, inStockOnly, onlyComparable, sort, comparableKeys]);
+  }, [
+    products,
+    q,
+    source,
+    inStockOnly,
+    onlyComparable,
+    sort,
+    comparableKeys,
+    couponPct,
+  ]);
 
   const stats = useMemo(() => {
     const inStock = products.filter((p) => p.available);
@@ -130,9 +155,34 @@ export default function Explorer({
             onClick={() => setOnlyComparable((v) => !v)}
             label="비교가능만"
           />
+          <div
+            className={`flex items-center gap-1 rounded-md border px-2 py-2 text-sm ${
+              couponPct > 0
+                ? "border-amber-500 bg-amber-50 text-amber-800"
+                : "border-stone-400/60 bg-white text-stone-600"
+            }`}
+            title="Cultizm 상품에 쿠폰 할인율(%)을 적용합니다"
+          >
+            <span className="whitespace-nowrap text-xs">🎟 Cultizm 쿠폰</span>
+            <input
+              type="number"
+              min={0}
+              max={90}
+              value={coupon || ""}
+              onChange={(e) => setCoupon(Number(e.target.value) || 0)}
+              placeholder="0"
+              className="w-9 bg-transparent text-right outline-none"
+            />
+            <span className="text-xs">%</span>
+          </div>
         </div>
         <p className="mt-2 text-xs text-stone-500">
           {filtered.length.toLocaleString()}개 표시 중
+          {couponPct > 0 && (
+            <span className="ml-2 font-medium text-amber-700">
+              · Cultizm 쿠폰 −{couponPct}% 적용 중
+            </span>
+          )}
         </p>
       </div>
 
@@ -155,6 +205,7 @@ export default function Explorer({
                 isCheapest={isCheapest}
                 fxUsd={fxUsd}
                 fxEur={fxEur}
+                couponPct={couponPct}
               />
             );
           })}
@@ -170,18 +221,22 @@ function Card({
   isCheapest,
   fxUsd,
   fxEur,
+  couponPct,
 }: {
   p: Product;
   comparable: boolean;
   isCheapest: boolean;
   fxUsd: number;
   fxEur: number;
+  couponPct: number;
 }) {
   const store = STORE_META[p.source];
+  const couponApplies = p.source === "cultizm" && couponPct > 0;
+  const couponFactor = couponApplies ? 1 - couponPct / 100 : 1;
+  const effKrw =
+    p.price_krw != null ? Math.round(p.price_krw * couponFactor) : null;
   const landed =
-    p.price_krw != null
-      ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur)
-      : null;
+    effKrw != null ? estimateLanded(effKrw, p.source, fxUsd, fxEur) : null;
   const onSale =
     p.compare_at_price != null && p.price != null && p.compare_at_price > p.price;
   const factor = EXPORT_FACTOR[p.source] ?? 1;
@@ -190,6 +245,8 @@ function Card({
     p.price_export ?? (p.price != null ? p.price * factor : null);
   const compareExport =
     p.compare_at_price != null ? p.compare_at_price * factor : null;
+  const effExportNative =
+    exportNative != null ? exportNative * couponFactor : null;
   const vatFree = p.source === "cultizm";
   return (
     <a
@@ -237,23 +294,36 @@ function Card({
           <div className="flex items-baseline gap-1.5">
             <span
               className={`text-base font-black ${
-                comparable && isCheapest ? "text-amber-700" : "text-stone-900"
+                couponApplies || (comparable && isCheapest)
+                  ? "text-amber-700"
+                  : "text-stone-900"
               }`}
             >
-              {krw(p.price_krw)}
+              {krw(effKrw)}
             </span>
-            {onSale && (
+            {couponApplies && (
+              <span className="text-[10px] font-bold text-amber-700">
+                쿠폰 −{couponPct}%
+              </span>
+            )}
+            {onSale && !couponApplies && (
               <span className="text-[11px] font-semibold text-red-600">
                 SALE
               </span>
             )}
           </div>
           <div className="text-[11px] text-stone-500">
-            {native(exportNative, p.currency)} {p.currency}
-            {onSale && (
-              <span className="ml-1 line-through">
-                {native(compareExport, p.currency)}
+            {native(effExportNative, p.currency)} {p.currency}
+            {couponApplies ? (
+              <span className="ml-1 text-stone-400 line-through">
+                {native(exportNative, p.currency)}
               </span>
+            ) : (
+              onSale && (
+                <span className="ml-1 line-through">
+                  {native(compareExport, p.currency)}
+                </span>
+              )
             )}
             {vatFree && (
               <span className="ml-1 font-medium text-emerald-700">
