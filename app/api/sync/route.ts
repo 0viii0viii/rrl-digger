@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-// @ts-expect-error - plain JS module shared with the CLI
 import { runIngest } from "@/lib/ingest.mjs";
 
 // Long-running scrape: allow up to 60s (Hobby cap; Pro can go to 300).
