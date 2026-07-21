@@ -96,6 +96,11 @@ export default async function Home() {
           비용은 더 낮아져요. HS코드·실제 배송비에 따라 달라집니다.
         </p>
         <p>가격·재고는 각 편집샵 피드 기준 · 구매 전 원 사이트에서 확인하세요.</p>
+        <p className="pt-1 text-stone-400">
+          Lee&apos;s Ranch는 독립 가격비교 서비스이며 Ralph Lauren · RRL(Double
+          RL) 및 각 편집샵과 제휴·후원·보증 관계가 없습니다. 모든 상표와 상품
+          이미지의 권리는 각 소유자에게 있습니다.
+        </p>
       </footer>
     </main>
   );
