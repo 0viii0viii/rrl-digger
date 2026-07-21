@@ -15,28 +15,21 @@ export function deMinimisUSD(source: string): number {
   return source === "stag" ? 200 : 150; // Stag ships from US → $200
 }
 
-// Cultizm ships to Korea "from €25" via DHL/UPS, weight-based (tiers not
-// published) — approximate by weight. €25 is the floor for the lightest parcels.
-function cultizmShipEUR(grams: number): number {
-  const kg = (grams || 0) / 1000;
-  if (kg <= 0.5) return 25;
-  if (kg <= 1) return 30;
-  if (kg <= 2) return 40;
-  if (kg <= 3) return 50;
-  if (kg <= 5) return 65;
-  return 80;
-}
+// Flat per-order shipping to Korea. Weight tiers aren't published and the feed's
+// weights are unreliable, so these are fixed values verified from checkout.
+// NOTE: charged per ORDER — buying multiple items amortizes it (real per-item
+// cost is lower), but each card is estimated as a single-item purchase.
+const STAG_SHIP_USD = 50; // Stag flat DHL Express
+const CULTIZM_SHIP_EUR = 36; // Cultizm to Korea, ~₩60k observed (policy "from €25")
 
-// Shipping estimate (KRW). Stag = flat $50 DHL. Cultizm = weight-based DHL/UPS.
 export function estShippingKRW(
   source: string,
   usdKrw: number,
   eurKrw: number,
-  grams = 0,
 ): number {
   return source === "stag"
-    ? Math.round(50 * usdKrw) // Stag flat $50 DHL Express
-    : Math.round(cultizmShipEUR(grams) * eurKrw);
+    ? Math.round(STAG_SHIP_USD * usdKrw)
+    : Math.round(CULTIZM_SHIP_EUR * eurKrw);
 }
 
 export type Landed = {
@@ -55,11 +48,10 @@ export function estimateLanded(
   source: string,
   usdKrw: number,
   eurKrw: number,
-  grams = 0,
 ): Landed {
   const thresholdUSD = deMinimisUSD(source);
   const thresholdKRW = thresholdUSD * usdKrw;
-  const shipping = estShippingKRW(source, usdKrw, eurKrw, grams);
+  const shipping = estShippingKRW(source, usdKrw, eurKrw);
 
   if (goodsKRW <= thresholdKRW) {
     return {
