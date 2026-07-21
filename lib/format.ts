@@ -25,3 +25,10 @@ export const STORE_META: Record<string, { label: string; color: string }> = {
   cultizm: { label: "Cultizm", color: "#7a5c3e" },
   stag: { label: "Stag Provisions", color: "#3e5a7a" },
 };
+
+// Fraction of the listed price a non-EU (Korea) buyer actually pays the shop,
+// after export VAT removal. EU shops list VAT-inclusive; US shops are pre-tax.
+export const EXPORT_FACTOR: Record<string, number> = {
+  cultizm: 1 / 1.19,
+  stag: 1,
+};

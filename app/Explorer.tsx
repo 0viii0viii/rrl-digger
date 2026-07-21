@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { type Product } from "@/lib/supabase";
-import { krw, native, matchKey, STORE_META } from "@/lib/format";
+import { krw, native, matchKey, STORE_META, EXPORT_FACTOR } from "@/lib/format";
 
 type SortKey = "price_asc" | "price_desc" | "title";
 
@@ -169,6 +169,13 @@ function Card({
   const store = STORE_META[p.source];
   const onSale =
     p.compare_at_price != null && p.price != null && p.compare_at_price > p.price;
+  const factor = EXPORT_FACTOR[p.source] ?? 1;
+  // Native price the buyer actually pays the shop (VAT removed for EU).
+  const exportNative =
+    p.price_export ?? (p.price != null ? p.price * factor : null);
+  const compareExport =
+    p.compare_at_price != null ? p.compare_at_price * factor : null;
+  const vatFree = p.source === "cultizm";
   return (
     <a
       href={p.product_url}
@@ -227,10 +234,15 @@ function Card({
             )}
           </div>
           <div className="text-[11px] text-stone-500">
-            {native(p.price, p.currency)} {p.currency}
+            {native(exportNative, p.currency)} {p.currency}
             {onSale && (
               <span className="ml-1 line-through">
-                {native(p.compare_at_price, p.currency)}
+                {native(compareExport, p.currency)}
+              </span>
+            )}
+            {vatFree && (
+              <span className="ml-1 font-medium text-emerald-700">
+                VAT 제외
               </span>
             )}
           </div>

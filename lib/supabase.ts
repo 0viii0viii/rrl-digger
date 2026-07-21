@@ -28,6 +28,7 @@ export type Product = {
   currency: "EUR" | "USD";
   price: number | null;
   compare_at_price: number | null;
+  price_export: number | null;
   price_krw: number | null;
   available: boolean;
   variants: Variant[] | null;
