@@ -12,6 +12,16 @@ export default async function Home() {
 
   const products = (data ?? []) as Product[];
 
+  // Latest FX (from the most recent sync) for the customs estimate.
+  const { data: fxRow } = await supabase
+    .from("digg_sync_runs")
+    .select("fx_usd_krw, fx_eur_krw")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const fxUsd = Number(fxRow?.fx_usd_krw ?? 1380);
+  const fxEur = Number(fxRow?.fx_eur_krw ?? 1490);
+
   const lastUpdated =
     products.length > 0
       ? products.reduce(
@@ -45,12 +55,25 @@ export default async function Home() {
           데이터를 불러오지 못했습니다: {error.message}
         </div>
       ) : (
-        <Explorer products={products} lastUpdated={lastUpdated} />
+        <Explorer
+          products={products}
+          lastUpdated={lastUpdated}
+          fxUsd={fxUsd}
+          fxEur={fxEur}
+        />
       )}
 
-      <footer className="border-t border-stone-300/70 py-8 text-center text-xs text-stone-500">
-        가격·재고는 각 편집샵 데이터 기준이며 실제와 다를 수 있습니다 · 구매 전
-        원 사이트에서 확인하세요
+      <footer className="mx-auto max-w-6xl space-y-1 px-5 py-8 text-center text-[11px] leading-relaxed text-stone-500">
+        <p>
+          표시 가격은 <b>중간환율 기준 참고가</b>예요. 실제 결제는 카드사 환율·
+          수수료, 각 샵 환전 마진으로 <b>조금 다를 수 있어요.</b>
+        </p>
+        <p>
+          관세는 <b>자가사용 직구 추정치</b>입니다 — 의류 관세 13% + 부가세 10%,
+          면세 한도 미국(Stag) $200 / 기타(Cultizm) $150, 배송비는 가정값(Stag
+          $50 · Cultizm ~€25). HS코드·실제 배송비에 따라 달라져요.
+        </p>
+        <p>가격·재고는 각 편집샵 피드 기준 · 구매 전 원 사이트에서 확인하세요.</p>
       </footer>
     </main>
   );

@@ -3,15 +3,20 @@
 import { useMemo, useState } from "react";
 import { type Product } from "@/lib/supabase";
 import { krw, native, matchKey, STORE_META, EXPORT_FACTOR } from "@/lib/format";
+import { estimateLanded } from "@/lib/customs";
 
 type SortKey = "price_asc" | "price_desc" | "title";
 
 export default function Explorer({
   products,
   lastUpdated,
+  fxUsd,
+  fxEur,
 }: {
   products: Product[];
   lastUpdated: string | null;
+  fxUsd: number;
+  fxEur: number;
 }) {
   const [q, setQ] = useState("");
   const [source, setSource] = useState<"all" | "cultizm" | "stag">("all");
@@ -148,6 +153,8 @@ export default function Explorer({
                 p={p}
                 comparable={comparable}
                 isCheapest={isCheapest}
+                fxUsd={fxUsd}
+                fxEur={fxEur}
               />
             );
           })}
@@ -161,12 +168,20 @@ function Card({
   p,
   comparable,
   isCheapest,
+  fxUsd,
+  fxEur,
 }: {
   p: Product;
   comparable: boolean;
   isCheapest: boolean;
+  fxUsd: number;
+  fxEur: number;
 }) {
   const store = STORE_META[p.source];
+  const landed =
+    p.price_krw != null
+      ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur)
+      : null;
   const onSale =
     p.compare_at_price != null && p.price != null && p.compare_at_price > p.price;
   const factor = EXPORT_FACTOR[p.source] ?? 1;
@@ -246,6 +261,22 @@ function Card({
               </span>
             )}
           </div>
+          {landed && (
+            <div className="mt-1 text-[10px] leading-tight">
+              {landed.taxFree ? (
+                <span className="font-semibold text-emerald-700">
+                  ✓ 면세 예상 (${landed.thresholdUSD} 이하)
+                </span>
+              ) : (
+                <span className="text-stone-500">
+                  +관세·부가세 ~{krw(landed.tax)}
+                  <span className="text-stone-400">
+                    {" · "}도착가 ~{krw(landed.total)}
+                  </span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </a>
