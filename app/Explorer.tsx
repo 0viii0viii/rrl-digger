@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { type Product } from "@/lib/supabase";
-import { krw, native, matchKey, STORE_META, EXPORT_FACTOR } from "@/lib/format";
+import {
+  krw,
+  native,
+  matchKey,
+  STORE_META,
+  EXPORT_FACTOR,
+  CATEGORIES,
+  categorize,
+} from "@/lib/format";
 import { estimateLanded } from "@/lib/customs";
 
 type SortKey = "price_asc" | "price_desc" | "title";
@@ -36,6 +44,7 @@ export default function Explorer({
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
   const couponPct = Math.min(90, Math.max(0, coupon));
+  const [category, setCategory] = useState("all");
 
   // Group by fuzzy match key to detect items carried by BOTH stores.
   const { comparableKeys, cheaperByKey } = useMemo(() => {
@@ -71,6 +80,8 @@ export default function Explorer({
     let list = products.filter((p) => {
       if (inStockOnly && !p.available) return false;
       if (source !== "all" && p.source !== source) return false;
+      if (category !== "all" && categorize(p.product_type) !== category)
+        return false;
       if (onlyComparable && !comparableKeys.has(matchKey(p.title))) return false;
       if (needle && !p.title.toLowerCase().includes(needle)) return false;
       return true;
@@ -86,6 +97,7 @@ export default function Explorer({
     products,
     q,
     source,
+    category,
     inStockOnly,
     onlyComparable,
     sort,
@@ -134,6 +146,14 @@ export default function Explorer({
               ["all", "전체 편집샵"],
               ["cultizm", "Cultizm"],
               ["stag", "Stag Provisions"],
+            ]}
+          />
+          <Select
+            value={category}
+            onChange={(v) => setCategory(v)}
+            options={[
+              ["all", "전체 카테고리"],
+              ...CATEGORIES.map((c) => [c, c] as [string, string]),
             ]}
           />
           <Select
@@ -287,6 +307,9 @@ function Card({
         )}
       </div>
       <div className="flex flex-1 flex-col p-3">
+        <p className="mb-0.5 text-[10px] font-medium uppercase tracking-wide text-stone-400">
+          {categorize(p.product_type)}
+        </p>
         <p className="line-clamp-2 text-[13px] font-medium leading-snug text-stone-800">
           {p.title.replace(/^RRL\s*/i, "")}
         </p>
