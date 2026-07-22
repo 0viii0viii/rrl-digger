@@ -52,6 +52,30 @@ export const CATEGORIES = [
   "기타",
 ] as const;
 
+// In-stock sizes for a product (excludes Shopify's "Default Title" no-option variant).
+export function availableSizes(
+  variants: { title: string | null; available: boolean }[] | null,
+): string[] {
+  if (!variants) return [];
+  return variants
+    .filter((v) => v.available && v.title && v.title !== "Default Title")
+    .map((v) => v.title as string);
+}
+
+// Loose size match: query token-prefixes any token of an available size.
+// e.g. "32" → "33/32", "32/32"; "M" → "MEDIUM"; "MEDIUM" → "MEDIUM".
+export function sizeMatches(sizes: string[], query: string): boolean {
+  const q = query.trim().toUpperCase();
+  if (!q) return true;
+  return sizes.some((s) =>
+    s
+      .toUpperCase()
+      .split(/[^A-Z0-9]+/)
+      .filter(Boolean)
+      .some((tok) => tok.startsWith(q)),
+  );
+}
+
 export function categorize(productType: string | null): string {
   const t = (productType ?? "").toLowerCase();
   if (!t) return "기타";

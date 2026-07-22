@@ -1,6 +1,23 @@
 import type { Metadata } from "next";
+import { Fraunces, Archivo, Spline_Sans_Mono } from "next/font/google";
 import { SITE } from "@/lib/site";
 import "./globals.css";
+
+const display = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+const body = Archivo({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+const mono = Spline_Sans_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -89,7 +106,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    <html
+      lang="ko"
+      className={`${display.variable} ${body.variable} ${mono.variable}`}
+    >
       <body>
         {children}
         <script

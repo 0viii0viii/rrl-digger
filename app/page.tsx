@@ -3,6 +3,15 @@ import Explorer from "./Explorer";
 
 export const revalidate = 600; // re-fetch from Supabase every 10 min
 
+function timeAgoKST(iso: string): string {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return "방금";
+  if (m < 60) return `${m}분 전`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}시간 전`;
+  return `${Math.floor(h / 24)}일 전`;
+}
+
 export default async function Home() {
   const { data, error } = await supabase
     .from("digg_products")
@@ -32,19 +41,19 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen">
-      <header className="border-b border-stone-300/70 bg-stone-900 text-stone-100">
-        <div className="mx-auto max-w-6xl px-5 py-8">
-          <div className="flex items-center gap-3">
+      <header className="bg-[var(--indigo-deep)] text-[#efe6d2]">
+        <div className="mx-auto max-w-6xl px-5 pb-7 pt-9">
+          <div className="flex items-center gap-3.5">
             <svg
               viewBox="0 0 100 100"
-              className="h-12 w-12 shrink-0"
+              className="h-14 w-14 shrink-0"
               aria-hidden="true"
             >
               <path
                 d="M28.6 68 A28 28 0 1 1 71.4 68"
                 fill="none"
-                stroke="#f0e6d2"
-                strokeWidth="13"
+                stroke="#efe6d2"
+                strokeWidth="12"
                 strokeLinecap="round"
               />
               <path
@@ -53,21 +62,36 @@ export default async function Home() {
               />
             </svg>
             <div>
-              <h1 className="font-serif text-2xl font-bold tracking-wide">
-                LEE&apos;S RANCH
+              <h1 className="u-display text-3xl font-black leading-none tracking-tight">
+                Lee&apos;s Ranch
               </h1>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-amber-400/90">
+              <span className="u-mono mt-1 block text-[10px] uppercase tracking-[0.32em] text-[#cf9f4a]">
                 Americana · RRL price radar
               </span>
             </div>
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-300">
-            Double RL(RRL) 상품을{" "}
-            <b className="text-stone-100">Cultizm</b>(🇩🇪 EUR) ·{" "}
-            <b className="text-stone-100">Stag Provisions</b>(🇺🇸 USD) 두
-            편집샵에서 끌어와 원화로 환산 비교합니다. 같은 제품을 양쪽이
-            취급하면 더 싼 쪽을 표시해요.
+          <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-[#cdbf9f]">
+            전 세계 편집샵의 <b className="text-[#efe6d2]">RRL(Double RL)</b>을
+            원화로 비교하고, <b className="text-[#efe6d2]">관세·부가세·배송</b>까지
+            얹은 <b className="text-[#efe6d2]">예상 도착가</b>를 알려드려요.
           </p>
+        </div>
+        {/* FX ticker */}
+        <div className="border-t border-[#cf9f4a]/20 bg-black/15">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-1 px-5 py-2 u-mono text-[11px] tracking-wide text-[#cdbf9f]">
+            <span className="text-[#cf9f4a]">TODAY&apos;S RATE</span>
+            <span>
+              EUR <b className="text-[#efe6d2]">₩{Math.round(fxEur).toLocaleString()}</b>
+            </span>
+            <span>
+              USD <b className="text-[#efe6d2]">₩{Math.round(fxUsd).toLocaleString()}</b>
+            </span>
+            {lastUpdated && (
+              <span className="ml-auto text-[#a99b78]">
+                동기화 {timeAgoKST(lastUpdated)}
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
@@ -84,7 +108,7 @@ export default async function Home() {
         />
       )}
 
-      <footer className="mx-auto max-w-6xl space-y-1 px-5 py-8 text-center text-[11px] leading-relaxed text-stone-500">
+      <footer className="mx-auto max-w-6xl space-y-1 border-t border-[var(--line)] px-5 py-8 text-center text-[11px] leading-relaxed text-[var(--muted)]">
         <p>
           표시 가격은 <b>중간환율 기준 참고가</b>예요. 실제 결제는 카드사 환율·
           수수료, 각 샵 환전 마진으로 <b>조금 다를 수 있어요.</b>

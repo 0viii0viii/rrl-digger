@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #f4efe6;
-  --ink: #1c1a17;
+  --paper: #f1e8d6;
+  --paper-2: #e8dcc2;
+  --card: #fbf7ee;
+  --ink: #241f18;
+  --muted: #8a7c5e;
+  --indigo: #26384c;
+  --indigo-deep: #1b2a39;
+  --rust: #b1512f;
+  --gold: #bd882a;
+  --line: #d6c9a8;
+  --line-strong: #b8a97f;
 }
 
 html {
@@ -10,7 +19,59 @@ html {
 }
 
 body {
-  background: var(--paper);
+  background-color: var(--paper);
   color: var(--ink);
+  font-family:
+    var(--font-body), "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic",
+    "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Film-grain paper texture (self-contained, non-blocking) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.u-display {
+  font-family: var(--font-display), "Nanum Myeongjo", Georgia, serif;
+  font-optical-sizing: auto;
+}
+.u-mono {
+  font-family: var(--font-mono), ui-monospace, "SFMono-Regular", monospace;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Staggered entrance for product cards */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: riseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
+
+/* Hide horizontal scrollbar on the category rail */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
