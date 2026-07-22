@@ -43,7 +43,12 @@ export const CATEGORIES = [
   "데님",
   "팬츠",
   "슈즈",
-  "액세서리",
+  "모자",
+  "가방",
+  "벨트",
+  "지갑",
+  "반다나·스카프",
+  "주얼리·소품",
   "기타",
 ] as const;
 
@@ -75,19 +80,24 @@ export function categorize(productType: string | null): string {
     return "아우터";
   if (t.includes("boot") || t.startsWith("shoes") || t.includes("sneaker"))
     return "슈즈";
+  if (t.includes("hat") || t.includes("cap")) return "모자";
+  if (t.includes("bag") || t.includes("luggage")) return "가방";
+  if (t.includes("belt")) return "벨트";
+  if (t.includes("wallet")) return "지갑";
+  if (t.includes("bandana") || t.includes("scarv") || t.includes("scarf"))
+    return "반다나·스카프";
   if (
-    t.startsWith("accessories") ||
-    t.includes("belt") ||
-    t.includes("hat") ||
-    t.includes("cap") ||
-    t.includes("wallet") ||
-    t.includes("bag") ||
-    t.includes("bandana") ||
-    t.includes("scarv") ||
-    t.includes("scarf") ||
     t.includes("jewelry") ||
-    t.includes("necklace")
+    t.includes("necklace") ||
+    t.includes("pin") ||
+    t.includes("watch band") ||
+    t.includes("cuff") ||
+    t.includes("key chain") ||
+    t.includes("tie") ||
+    t.includes("eyewear") ||
+    t.includes("patch") ||
+    t.startsWith("accessories")
   )
-    return "액세서리";
+    return "주얼리·소품";
   return "기타";
 }
