@@ -5,7 +5,7 @@ name: sync-rrl
 
 on:
   schedule:
-    - cron: "0 0,12 * * *" # 00:00 and 12:00 UTC (every 12h)
+    - cron: "0 */6 * * *" # every 6 hours (00, 06, 12, 18 UTC)
   workflow_dispatch: {} # allow manual run from the Actions tab
 
 jobs:
