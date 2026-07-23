@@ -14,8 +14,8 @@ export default function SiteFooter() {
       <p>가격·재고는 각 편집샵 피드 기준 · 구매 전 원 사이트에서 확인하세요.</p>
       <p className="pt-1 text-[var(--ink)]/70">
         <b>제휴 공지:</b> Lee&apos;s Ranch는 파트너 편집샵 링크를 통해 발생한
-        구매에 대해 소정의 수수료를 받을 수 있습니다. 가격·표시에는 영향을
-        주지 않습니다.
+        구매에 대해 <b>Lee&apos;s Ranch가</b> 소정의 수수료를 받을 수
+        있습니다. 구매자가 내시는 금액에는 영향이 없습니다(추가 부담 없음).
       </p>
       <p className="text-stone-400">
         Lee&apos;s Ranch는 Ralph Lauren · RRL(Double RL)과 제휴·후원·보증

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { type Product } from "@/lib/supabase";
 import {
   krw,
@@ -34,11 +33,16 @@ export default function Explorer({
   lastUpdated,
   fxUsd,
   fxEur,
+  initialCategory,
 }: {
   products: Product[];
   lastUpdated: string | null;
   fxUsd: number;
   fxEur: number;
+  /** From the server component's `searchParams` (?category=...) — avoids a
+   * client-only useSearchParams()/Suspense hook, which would otherwise blank
+   * out the product grid in the server-rendered HTML until hydration. */
+  initialCategory?: string;
 }) {
   const [q, setQ] = useState("");
   const [source, setSource] = useState<"all" | "cultizm" | "stag">("all");
@@ -47,9 +51,6 @@ export default function Explorer({
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
   const couponPct = Math.min(90, Math.max(0, coupon));
-  // Deep-linkable via ?category= (product detail pages link back here).
-  const searchParams = useSearchParams();
-  const initialCategory = searchParams.get("category");
   const [category, setCategory] = useState(
     initialCategory && (CATEGORIES as readonly string[]).includes(initialCategory)
       ? initialCategory

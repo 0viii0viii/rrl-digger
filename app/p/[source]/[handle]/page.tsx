@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { supabase, type Product } from "@/lib/supabase";
+import { getAllRRLProducts } from "@/lib/products";
 import { getLatestFx } from "@/lib/fx";
 import { SITE } from "@/lib/site";
 import {
@@ -84,14 +85,8 @@ export default async function ProductPage({
   const key = matchKey(p.title);
   let comparables: Product[] = [];
   if (key) {
-    const { data } = await supabase
-      .from("digg_products")
-      .select("*")
-      .eq("vendor", "RRL")
-      .neq("id", p.id);
-    comparables = ((data ?? []) as Product[]).filter(
-      (o) => matchKey(o.title) === key,
-    );
+    const all = await getAllRRLProducts();
+    comparables = all.filter((o) => o.id !== p.id && matchKey(o.title) === key);
   }
 
   const name = p.title.replace(/^RRL\s*/i, "");
@@ -278,7 +273,8 @@ export default async function ProductPage({
               {store.label}에서 구매하러 가기 ↗
             </a>
             <p className="u-mono mt-2 text-center text-[10px] text-[var(--muted)]">
-              외부 사이트로 이동합니다 · 구매 시 수수료를 받을 수 있어요
+              외부 사이트로 이동합니다 · 구매하셔도 가격은 동일하며, Lee&apos;s
+              Ranch가 판매처로부터 소정의 수수료를 받을 수 있어요
             </p>
           </div>
         </div>
