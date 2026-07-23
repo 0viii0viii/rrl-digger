@@ -17,7 +17,7 @@ export type Variant = {
 
 export type Product = {
   id: number;
-  source: "cultizm" | "stag";
+  source: "cultizm" | "stag" | "deecee";
   source_product_id: string;
   handle: string | null;
   title: string;
@@ -25,7 +25,7 @@ export type Product = {
   product_type: string | null;
   product_url: string;
   image_url: string | null;
-  currency: "EUR" | "USD";
+  currency: "EUR" | "USD" | "CHF";
   price: number | null;
   compare_at_price: number | null;
   price_export: number | null;

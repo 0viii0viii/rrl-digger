@@ -99,7 +99,7 @@ export default async function ProductPage({
 
   // FX and comparables don't depend on each other — run them in parallel.
   const key = matchKey(p.title);
-  const [{ fxUsd, fxEur }, comparables] = await Promise.all([
+  const [{ fxUsd, fxEur, fxChf }, comparables] = await Promise.all([
     getLatestFx(),
     getComparables(p.source, key),
   ]);
@@ -116,7 +116,9 @@ export default async function ProductPage({
   const compareExport =
     p.compare_at_price != null ? p.compare_at_price * factor : null;
   const landed =
-    p.price_krw != null ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur) : null;
+    p.price_krw != null
+      ? estimateLanded(p.price_krw, p.source, fxUsd, fxEur, fxChf)
+      : null;
   const sizes = availableSizes(p.variants);
   const vatFree = p.source === "cultizm";
 
@@ -164,7 +166,13 @@ export default async function ProductPage({
 
   return (
     <main className="min-h-screen">
-      <SiteHeader fxUsd={fxUsd} fxEur={fxEur} lastUpdated={p.updated_at} compact />
+      <SiteHeader
+        fxUsd={fxUsd}
+        fxEur={fxEur}
+        fxChf={fxChf}
+        lastUpdated={p.updated_at}
+        compact
+      />
 
       <div className="mx-auto max-w-5xl px-5 py-6">
         <nav className="u-mono mb-4 flex flex-wrap items-center gap-1 text-[11px] uppercase tracking-wide text-[var(--muted)]">
@@ -279,10 +287,13 @@ export default async function ProductPage({
               </div>
             )}
 
+            {/* Kutoku's autolinker mutates outbound links (adds data-kutoku=…)
+                after hydration — tell React not to warn about that diff. */}
             <a
               href={p.product_url}
               target="_blank"
               rel="noopener noreferrer"
+              suppressHydrationWarning
               className="u-mono mt-5 flex items-center justify-center gap-2 border border-[var(--indigo)] bg-[var(--indigo)] px-5 py-3.5 text-sm font-bold uppercase tracking-wide text-[#f1e8d6] transition hover:bg-[var(--indigo-deep)]"
             >
               {store.label}에서 구매하러 가기 ↗

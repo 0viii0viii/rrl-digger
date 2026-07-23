@@ -13,7 +13,10 @@ export async function getAllRRLProducts(): Promise<Product[]> {
       .from("digg_products")
       .select("*")
       .eq("vendor", "RRL")
+      // Secondary sort by id: price_krw has many ties, and without a stable
+      // tiebreaker the .range() page boundaries can repeat/skip rows.
       .order("price_krw", { ascending: true })
+      .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
     if (error || !data || data.length === 0) break;
     all.push(...(data as Product[]));

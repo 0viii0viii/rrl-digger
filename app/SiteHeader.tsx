@@ -10,11 +10,13 @@ function timeAgoKST(iso: string): string {
 export default function SiteHeader({
   fxUsd,
   fxEur,
+  fxChf,
   lastUpdated,
   compact,
 }: {
   fxUsd: number;
   fxEur: number;
+  fxChf?: number;
   lastUpdated: string | null;
   /** Smaller hero for sub-pages (product detail) — logo + ticker only. */
   compact?: boolean;
@@ -73,6 +75,11 @@ export default function SiteHeader({
           <span>
             USD <b className="text-[#efe6d2]">₩{Math.round(fxUsd).toLocaleString()}</b>
           </span>
+          {fxChf ? (
+            <span>
+              CHF <b className="text-[#efe6d2]">₩{Math.round(fxChf).toLocaleString()}</b>
+            </span>
+          ) : null}
           {lastUpdated && (
             <span className="ml-auto text-[#a99b78]">
               동기화 {timeAgoKST(lastUpdated)}

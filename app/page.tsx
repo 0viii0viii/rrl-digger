@@ -11,7 +11,7 @@ import SiteFooter from "./SiteFooter";
 export const revalidate = 600;
 
 export default async function Home() {
-  const [products, { fxUsd, fxEur }] = await Promise.all([
+  const [products, { fxUsd, fxEur, fxChf }] = await Promise.all([
     getAllRRLProducts(),
     getLatestFx(),
   ]);
@@ -26,13 +26,19 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen">
-      <SiteHeader fxUsd={fxUsd} fxEur={fxEur} lastUpdated={lastUpdated} />
+      <SiteHeader
+        fxUsd={fxUsd}
+        fxEur={fxEur}
+        fxChf={fxChf}
+        lastUpdated={lastUpdated}
+      />
 
       <Explorer
         products={products}
         lastUpdated={lastUpdated}
         fxUsd={fxUsd}
         fxEur={fxEur}
+        fxChf={fxChf}
       />
 
       <SiteFooter />

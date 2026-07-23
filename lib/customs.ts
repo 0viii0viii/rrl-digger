@@ -22,14 +22,28 @@ export function deMinimisUSD(source: string): number {
 const STAG_SHIP_USD = 50; // Stag flat DHL Express
 const CULTIZM_SHIP_EUR = 36; // Cultizm to Korea, ~₩60k observed (policy "from €25")
 
+// DeeCee 🇨🇭 charges Korea shipping on a sliding scale by ORDER VALUE in CHF —
+// higher order value = cheaper shipping (Express UPS/FedEx/DHL).
+function deeceeShipCHF(goodsCHF: number): number {
+  if (goodsCHF < 99) return 34;
+  if (goodsCHF < 499) return 29;
+  if (goodsCHF < 999) return 19;
+  return 9;
+}
+
 export function estShippingKRW(
   source: string,
   usdKrw: number,
   eurKrw: number,
+  chfKrw = 1550,
+  goodsKRW = 0,
 ): number {
-  return source === "stag"
-    ? Math.round(STAG_SHIP_USD * usdKrw)
-    : Math.round(CULTIZM_SHIP_EUR * eurKrw);
+  if (source === "stag") return Math.round(STAG_SHIP_USD * usdKrw);
+  if (source === "deecee") {
+    const goodsCHF = chfKrw > 0 ? goodsKRW / chfKrw : 0;
+    return Math.round(deeceeShipCHF(goodsCHF) * chfKrw);
+  }
+  return Math.round(CULTIZM_SHIP_EUR * eurKrw);
 }
 
 export type Landed = {
@@ -48,10 +62,11 @@ export function estimateLanded(
   source: string,
   usdKrw: number,
   eurKrw: number,
+  chfKrw = 1550,
 ): Landed {
   const thresholdUSD = deMinimisUSD(source);
   const thresholdKRW = thresholdUSD * usdKrw;
-  const shipping = estShippingKRW(source, usdKrw, eurKrw);
+  const shipping = estShippingKRW(source, usdKrw, eurKrw, chfKrw, goodsKRW);
 
   if (goodsKRW <= thresholdKRW) {
     return {

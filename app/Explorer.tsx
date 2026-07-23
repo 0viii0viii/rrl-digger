@@ -10,6 +10,7 @@ import {
   EXPORT_FACTOR,
   CATEGORIES,
   categorize,
+  genderOf,
   availableSizes,
   sizeMatches,
 } from "@/lib/format";
@@ -33,20 +34,33 @@ export default function Explorer({
   lastUpdated,
   fxUsd,
   fxEur,
+  fxChf,
 }: {
   products: Product[];
   lastUpdated: string | null;
   fxUsd: number;
   fxEur: number;
+  fxChf: number;
 }) {
   const [q, setQ] = useState("");
-  const [source, setSource] = useState<"all" | "cultizm" | "stag">("all");
+  const [source, setSource] = useState<string>("all");
+  // Which stores actually appear in the current data — drives the filter list
+  // so adding a shop needs no UI change here.
+  const activeSources = useMemo(() => {
+    const seen = new Set<string>(products.map((p) => p.source));
+    return Object.keys(STORE_META).filter((s) => seen.has(s));
+  }, [products]);
   const [inStockOnly, setInStockOnly] = useState(true);
   const [onlyComparable, setOnlyComparable] = useState(false);
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
   const couponPct = Math.min(90, Math.max(0, coupon));
   const [category, setCategory] = useState("all");
+  const [gender, setGender] = useState<"all" | "men" | "women">("all");
+  const hasWomen = useMemo(
+    () => products.some((p) => genderOf(p.tags, p.title) === "women"),
+    [products],
+  );
 
   // ?category= deep link (from product pages) — read client-side only, so the
   // homepage stays statically cached (no useSearchParams/Suspense, no dynamic
@@ -92,6 +106,7 @@ export default function Explorer({
     let list = products.filter((p) => {
       if (inStockOnly && !p.available) return false;
       if (source !== "all" && p.source !== source) return false;
+      if (gender !== "all" && genderOf(p.tags, p.title) !== gender) return false;
       if (category !== "all" && categorize(p.product_type) !== category)
         return false;
       if (sizeQuery.trim() && !sizeMatches(availableSizes(p.variants), sizeQuery))
@@ -111,6 +126,7 @@ export default function Explorer({
     products,
     q,
     source,
+    gender,
     category,
     sizeQuery,
     inStockOnly,
@@ -132,6 +148,11 @@ export default function Explorer({
   // Active-filter chips
   const chips: { label: string; onClear: () => void }[] = [];
   if (q.trim()) chips.push({ label: `검색 "${q}"`, onClear: () => setQ("") });
+  if (gender !== "all")
+    chips.push({
+      label: gender === "women" ? "여성" : "남성",
+      onClear: () => setGender("all"),
+    });
   if (category !== "all")
     chips.push({ label: category, onClear: () => setCategory("all") });
   if (source !== "all")
@@ -144,7 +165,7 @@ export default function Explorer({
   if (couponPct > 0)
     chips.push({ label: `쿠폰 −${couponPct}%`, onClear: () => setCoupon(0) });
   if (onlyComparable)
-    chips.push({ label: "양쪽 취급", onClear: () => setOnlyComparable(false) });
+    chips.push({ label: "여러 샵 취급", onClear: () => setOnlyComparable(false) });
   if (!inStockOnly)
     chips.push({ label: "품절 포함", onClear: () => setInStockOnly(true) });
 
@@ -154,6 +175,7 @@ export default function Explorer({
     setQ("");
     setCategory("all");
     setSource("all");
+    setGender("all");
     setSizeQuery("");
     setCoupon(0);
     setOnlyComparable(false);
@@ -206,6 +228,29 @@ export default function Explorer({
               className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
             />
           </label>
+          {hasWomen && (
+            <div className="flex rounded-none border border-[var(--line-strong)] bg-[var(--card)] text-sm">
+              {(
+                [
+                  ["all", "전체"],
+                  ["men", "남성"],
+                  ["women", "여성"],
+                ] as [typeof gender, string][]
+              ).map(([g, label]) => (
+                <button
+                  key={g}
+                  onClick={() => setGender(g)}
+                  className={`px-2.5 py-2 transition ${
+                    gender === g
+                      ? "bg-[var(--indigo)] text-[#f1e8d6]"
+                      : "text-[var(--ink)] hover:bg-[var(--paper-2)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <Select
             value={sort}
             onChange={(v) => setSort(v as SortKey)}
@@ -240,17 +285,18 @@ export default function Explorer({
           <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] py-3">
             <Select
               value={source}
-              onChange={(v) => setSource(v as typeof source)}
+              onChange={setSource}
               options={[
                 ["all", "전체 편집샵"],
-                ["cultizm", "Cultizm 🇩🇪"],
-                ["stag", "Stag Provisions 🇺🇸"],
+                ...activeSources.map(
+                  (s) => [s, STORE_META[s].label] as [string, string],
+                ),
               ]}
             />
             <Toggle
               active={onlyComparable}
               onClick={() => setOnlyComparable((v) => !v)}
-              label="양쪽 취급만"
+              label="여러 샵 취급"
             />
             <FieldInput
               icon="📏"
@@ -338,6 +384,7 @@ export default function Explorer({
                 isCheapest={cheaperByKey.get(key) === p.id}
                 fxUsd={fxUsd}
                 fxEur={fxEur}
+                fxChf={fxChf}
                 couponPct={couponPct}
                 sizeQuery={sizeQuery}
               />
@@ -356,6 +403,7 @@ function Card({
   isCheapest,
   fxUsd,
   fxEur,
+  fxChf,
   couponPct,
   sizeQuery,
 }: {
@@ -365,6 +413,7 @@ function Card({
   isCheapest: boolean;
   fxUsd: number;
   fxEur: number;
+  fxChf: number;
   couponPct: number;
   sizeQuery: string;
 }) {
@@ -374,7 +423,9 @@ function Card({
   const effKrw =
     p.price_krw != null ? Math.round(p.price_krw * couponFactor) : null;
   const landed =
-    effKrw != null ? estimateLanded(effKrw, p.source, fxUsd, fxEur) : null;
+    effKrw != null
+      ? estimateLanded(effKrw, p.source, fxUsd, fxEur, fxChf)
+      : null;
   const onSale =
     p.compare_at_price != null &&
     p.price != null &&
@@ -396,6 +447,7 @@ function Card({
   return (
     <a
       href={href}
+      suppressHydrationWarning
       {...(!p.handle && { target: "_blank", rel: "noopener noreferrer" })}
       className="rise group flex flex-col overflow-hidden rounded-none border border-[var(--line)] bg-[var(--card)] transition duration-200 hover:-translate-y-1 hover:border-[var(--line-strong)] hover:shadow-[0_12px_30px_-12px_rgba(40,30,15,0.4)]"
       style={{ animationDelay: `${Math.min(index, 22) * 28}ms` }}
@@ -427,7 +479,7 @@ function Card({
         )}
         {comparable && (
           <span className="u-mono absolute bottom-2 left-2 rounded-none bg-[var(--gold)] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[var(--ink)]">
-            양쪽 취급{isCheapest ? " · 최저가" : ""}
+            여러 샵{isCheapest ? " · 최저가" : ""}
           </span>
         )}
       </div>
