@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { supabase, type Product } from "@/lib/supabase";
@@ -20,7 +21,9 @@ export const revalidate = 3600; // re-check this product hourly
 
 type Params = { source: string; handle: string };
 
-async function getProduct(source: string, handle: string) {
+// cache(): generateMetadata and the page both need the product — dedupe to a
+// single Supabase round trip per request.
+const getProduct = cache(async (source: string, handle: string) => {
   const { data } = await supabase
     .from("digg_products")
     .select("*")
@@ -29,6 +32,22 @@ async function getProduct(source: string, handle: string) {
     .eq("vendor", "RRL")
     .maybeSingle();
   return data as Product | null;
+});
+
+type Listing = Pick<
+  Product,
+  "id" | "source" | "handle" | "title" | "price_krw" | "available" | "product_url"
+>;
+
+// Same item at the OTHER shop — light columns only, filtered by fuzzy key.
+async function getComparables(source: string, key: string): Promise<Listing[]> {
+  if (!key) return [];
+  const { data } = await supabase
+    .from("digg_products")
+    .select("id, source, handle, title, price_krw, available, product_url")
+    .eq("vendor", "RRL")
+    .neq("source", source);
+  return ((data ?? []) as Listing[]).filter((o) => matchKey(o.title) === key);
 }
 
 export async function generateMetadata({
@@ -78,28 +97,12 @@ export default async function ProductPage({
   const p = await getProduct(source, handle);
   if (!p) notFound();
 
-  const { fxUsd, fxEur } = await getLatestFx();
-
-  // Find the same item carried by the OTHER shop, if any. Cross-store matches
-  // by definition live in the other source, so only fetch that half — and only
-  // the light columns the comparison table / JSON-LD offers need (keeps this
-  // query ~10x smaller than select(*) with variants).
-  type Listing = Pick<
-    Product,
-    "id" | "source" | "handle" | "title" | "price_krw" | "available" | "product_url"
-  >;
+  // FX and comparables don't depend on each other — run them in parallel.
   const key = matchKey(p.title);
-  let comparables: Listing[] = [];
-  if (key) {
-    const { data } = await supabase
-      .from("digg_products")
-      .select("id, source, handle, title, price_krw, available, product_url")
-      .eq("vendor", "RRL")
-      .neq("source", p.source);
-    comparables = ((data ?? []) as Listing[]).filter(
-      (o) => matchKey(o.title) === key,
-    );
-  }
+  const [{ fxUsd, fxEur }, comparables] = await Promise.all([
+    getLatestFx(),
+    getComparables(p.source, key),
+  ]);
 
   const name = p.title.replace(/^RRL\s*/i, "");
   const store = STORE_META[p.source];
