@@ -169,7 +169,8 @@ export default function Explorer({
   if (!inStockOnly)
     chips.push({ label: "품절 포함", onClear: () => setInStockOnly(true) });
 
-  const advActive = source !== "all" || !!sizeQuery.trim() || couponPct > 0 || onlyComparable;
+  const advActive =
+    gender !== "all" || !!sizeQuery.trim() || couponPct > 0 || onlyComparable;
 
   const reset = () => {
     setQ("");
@@ -228,29 +229,16 @@ export default function Explorer({
               className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]"
             />
           </label>
-          {hasWomen && (
-            <div className="flex rounded-none border border-[var(--line-strong)] bg-[var(--card)] text-sm">
-              {(
-                [
-                  ["all", "전체"],
-                  ["men", "남성"],
-                  ["women", "여성"],
-                ] as [typeof gender, string][]
-              ).map(([g, label]) => (
-                <button
-                  key={g}
-                  onClick={() => setGender(g)}
-                  className={`px-2.5 py-2 transition ${
-                    gender === g
-                      ? "bg-[var(--indigo)] text-[#f1e8d6]"
-                      : "text-[var(--ink)] hover:bg-[var(--paper-2)]"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+          <Select
+            value={source}
+            onChange={setSource}
+            options={[
+              ["all", "전체 편집샵"],
+              ...activeSources.map(
+                (s) => [s, STORE_META[s].label] as [string, string],
+              ),
+            ]}
+          />
           <Select
             value={sort}
             onChange={(v) => setSort(v as SortKey)}
@@ -283,16 +271,29 @@ export default function Explorer({
         {/* Advanced filters (collapsible) */}
         {showAdv && (
           <div className="flex flex-wrap items-center gap-2 border-t border-[var(--line)] py-3">
-            <Select
-              value={source}
-              onChange={setSource}
-              options={[
-                ["all", "전체 편집샵"],
-                ...activeSources.map(
-                  (s) => [s, STORE_META[s].label] as [string, string],
-                ),
-              ]}
-            />
+            {hasWomen && (
+              <div className="flex rounded-none border border-[var(--line-strong)] bg-[var(--card)] text-sm">
+                {(
+                  [
+                    ["all", "성별 전체"],
+                    ["men", "남성"],
+                    ["women", "여성"],
+                  ] as [typeof gender, string][]
+                ).map(([g, label]) => (
+                  <button
+                    key={g}
+                    onClick={() => setGender(g)}
+                    className={`px-2.5 py-2 transition ${
+                      gender === g
+                        ? "bg-[var(--indigo)] text-[#f1e8d6]"
+                        : "text-[var(--ink)] hover:bg-[var(--paper-2)]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <Toggle
               active={onlyComparable}
               onClick={() => setOnlyComparable((v) => !v)}

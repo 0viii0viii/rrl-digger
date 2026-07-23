@@ -298,10 +298,6 @@ export default async function ProductPage({
             >
               {store.label}에서 구매하러 가기 ↗
             </a>
-            <p className="u-mono mt-2 text-center text-[10px] text-[var(--muted)]">
-              외부 사이트로 이동합니다 · 구매하셔도 가격은 동일하며, Lee&apos;s
-              Ranch가 판매처로부터 소정의 수수료를 받을 수 있어요
-            </p>
           </div>
         </div>
 
