@@ -116,6 +116,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Kutoku autolinker — turns outbound Cultizm/Stag links into affiliate links */}
+        <script
+          src="https://fdxtxguv.leesranch.com/0Bgsj1.js"
+          data-kutoku-domain="fdxtxguv.leesranch.com"
+          data-kutoku-id="0Bgsj1"
+        />
       </body>
     </html>
   );
