@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { type Product } from "@/lib/supabase";
 import {
   krw,
@@ -46,7 +47,14 @@ export default function Explorer({
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
   const couponPct = Math.min(90, Math.max(0, coupon));
-  const [category, setCategory] = useState("all");
+  // Deep-linkable via ?category= (product detail pages link back here).
+  const searchParams = useSearchParams();
+  const initialCategory = searchParams.get("category");
+  const [category, setCategory] = useState(
+    initialCategory && (CATEGORIES as readonly string[]).includes(initialCategory)
+      ? initialCategory
+      : "all",
+  );
   const [sizeQuery, setSizeQuery] = useState("");
   const [showAdv, setShowAdv] = useState(false);
 
@@ -381,12 +389,14 @@ function Card({
   const vatFree = p.source === "cultizm";
   const sizes = availableSizes(p.variants);
   const highlight = couponApplies || (comparable && isCheapest);
+  // Internal detail page when we have a handle (SEO + comparison table);
+  // falls back to the external boutique link for the rare row without one.
+  const href = p.handle ? `/p/${p.source}/${p.handle}` : p.product_url;
 
   return (
     <a
-      href={p.product_url}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={href}
+      {...(!p.handle && { target: "_blank", rel: "noopener noreferrer" })}
       className="rise group flex flex-col overflow-hidden rounded-none border border-[var(--line)] bg-[var(--card)] transition duration-200 hover:-translate-y-1 hover:border-[var(--line-strong)] hover:shadow-[0_12px_30px_-12px_rgba(40,30,15,0.4)]"
       style={{ animationDelay: `${Math.min(index, 22) * 28}ms` }}
     >
