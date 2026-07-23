@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type Product } from "@/lib/supabase";
 import {
   krw,
@@ -135,6 +135,32 @@ export default function Explorer({
     comparableKeys,
     couponPct,
   ]);
+
+  // Incremental rendering: dumping all ~650 cards at once tanked mobile (DOM
+  // weight + lazy images never firing). Render a window and grow it as the user
+  // nears the bottom.
+  const PAGE = 40;
+  const [visible, setVisible] = useState(PAGE);
+  // Reset the window whenever the result set changes (any filter/sort change).
+  useEffect(() => {
+    setVisible(PAGE);
+  }, [filtered]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisible((v) => Math.min(v + PAGE, filtered.length));
+        }
+      },
+      { rootMargin: "600px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [filtered.length]);
+  const shown = filtered.slice(0, visible);
 
   const stats = useMemo(
     () => ({
@@ -373,25 +399,40 @@ export default function Explorer({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((p, i) => {
-            const key = matchKey(p.title);
-            return (
-              <Card
-                key={p.id}
-                p={p}
-                index={i}
-                comparable={comparableKeys.has(key)}
-                isCheapest={cheaperByKey.get(key) === p.id}
-                fxUsd={fxUsd}
-                fxEur={fxEur}
-                fxChf={fxChf}
-                couponPct={couponPct}
-                sizeQuery={sizeQuery}
-              />
-            );
-          })}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
+            {shown.map((p, i) => {
+              const key = matchKey(p.title);
+              return (
+                <Card
+                  key={p.id}
+                  p={p}
+                  index={i}
+                  comparable={comparableKeys.has(key)}
+                  isCheapest={cheaperByKey.get(key) === p.id}
+                  fxUsd={fxUsd}
+                  fxEur={fxEur}
+                  fxChf={fxChf}
+                  couponPct={couponPct}
+                  sizeQuery={sizeQuery}
+                />
+              );
+            })}
+          </div>
+          {visible < filtered.length && (
+            <div
+              ref={sentinelRef}
+              className="flex justify-center py-8"
+            >
+              <button
+                onClick={() => setVisible((v) => Math.min(v + PAGE, filtered.length))}
+                className="u-mono rounded-none border border-[var(--line-strong)] px-5 py-2.5 text-xs uppercase tracking-wide text-[var(--ink)] hover:border-[var(--indigo)]"
+              >
+                더 보기 ({filtered.length - visible}개 남음)
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
