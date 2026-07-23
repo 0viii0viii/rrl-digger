@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type Product } from "@/lib/supabase";
 import {
   krw,
@@ -33,16 +33,11 @@ export default function Explorer({
   lastUpdated,
   fxUsd,
   fxEur,
-  initialCategory,
 }: {
   products: Product[];
   lastUpdated: string | null;
   fxUsd: number;
   fxEur: number;
-  /** From the server component's `searchParams` (?category=...) — avoids a
-   * client-only useSearchParams()/Suspense hook, which would otherwise blank
-   * out the product grid in the server-rendered HTML until hydration. */
-  initialCategory?: string;
 }) {
   const [q, setQ] = useState("");
   const [source, setSource] = useState<"all" | "cultizm" | "stag">("all");
@@ -51,11 +46,15 @@ export default function Explorer({
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
   const couponPct = Math.min(90, Math.max(0, coupon));
-  const [category, setCategory] = useState(
-    initialCategory && (CATEGORIES as readonly string[]).includes(initialCategory)
-      ? initialCategory
-      : "all",
-  );
+  const [category, setCategory] = useState("all");
+
+  // ?category= deep link (from product pages) — read client-side only, so the
+  // homepage stays statically cached (no useSearchParams/Suspense, no dynamic
+  // rendering) and the full grid is still present in the server HTML.
+  useEffect(() => {
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c && (CATEGORIES as readonly string[]).includes(c)) setCategory(c);
+  }, []);
   const [sizeQuery, setSizeQuery] = useState("");
   const [showAdv, setShowAdv] = useState(false);
 

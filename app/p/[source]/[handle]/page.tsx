@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { supabase, type Product } from "@/lib/supabase";
-import { getAllRRLProducts } from "@/lib/products";
 import { getLatestFx } from "@/lib/fx";
 import { SITE } from "@/lib/site";
 import {
@@ -81,12 +80,25 @@ export default async function ProductPage({
 
   const { fxUsd, fxEur } = await getLatestFx();
 
-  // Find the same item carried by the other shop, if any.
+  // Find the same item carried by the OTHER shop, if any. Cross-store matches
+  // by definition live in the other source, so only fetch that half — and only
+  // the light columns the comparison table / JSON-LD offers need (keeps this
+  // query ~10x smaller than select(*) with variants).
+  type Listing = Pick<
+    Product,
+    "id" | "source" | "handle" | "title" | "price_krw" | "available" | "product_url"
+  >;
   const key = matchKey(p.title);
-  let comparables: Product[] = [];
+  let comparables: Listing[] = [];
   if (key) {
-    const all = await getAllRRLProducts();
-    comparables = all.filter((o) => o.id !== p.id && matchKey(o.title) === key);
+    const { data } = await supabase
+      .from("digg_products")
+      .select("id, source, handle, title, price_krw, available, product_url")
+      .eq("vendor", "RRL")
+      .neq("source", p.source);
+    comparables = ((data ?? []) as Listing[]).filter(
+      (o) => matchKey(o.title) === key,
+    );
   }
 
   const name = p.title.replace(/^RRL\s*/i, "");

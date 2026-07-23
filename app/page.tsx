@@ -4,17 +4,16 @@ import Explorer from "./Explorer";
 import SiteHeader from "./SiteHeader";
 import SiteFooter from "./SiteFooter";
 
-export const revalidate = 600; // re-fetch from Supabase every 10 min
+// Static + ISR: render once every 10 min, serve cached HTML from the CDN.
+// NOTE: do NOT read searchParams here — that would force per-request dynamic
+// rendering (full Supabase fetch on every visit). The ?category= deep link is
+// handled client-side in Explorer via window.location instead.
+export const revalidate = 600;
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>;
-}) {
-  const [products, { fxUsd, fxEur }, { category }] = await Promise.all([
+export default async function Home() {
+  const [products, { fxUsd, fxEur }] = await Promise.all([
     getAllRRLProducts(),
     getLatestFx(),
-    searchParams,
   ]);
 
   const lastUpdated =
@@ -34,7 +33,6 @@ export default async function Home({
         lastUpdated={lastUpdated}
         fxUsd={fxUsd}
         fxEur={fxEur}
-        initialCategory={category}
       />
 
       <SiteFooter />
