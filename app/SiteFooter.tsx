@@ -1,6 +1,24 @@
+const NAV = [
+  ["/about", "소개"],
+  ["/shops", "편집샵 정보"],
+  ["/guide/customs", "직구 관세 가이드"],
+  ["/contact", "문의"],
+] as const;
+
 export default function SiteFooter() {
   return (
     <footer className="mx-auto max-w-6xl space-y-1 border-t border-[var(--line)] px-5 py-8 text-center text-[11px] leading-relaxed text-[var(--muted)]">
+      <nav className="mb-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        {NAV.map(([href, label]) => (
+          <a
+            key={href}
+            href={href}
+            className="u-mono text-[11px] uppercase tracking-wide text-[var(--ink)]/70 underline-offset-2 hover:text-[var(--indigo)] hover:underline"
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
       <p>
         표시 가격은 <b>중간환율 기준 참고가</b>예요. 실제 결제는 카드사 환율·
         수수료, 각 샵 환전 마진으로 <b>조금 다를 수 있어요.</b>
