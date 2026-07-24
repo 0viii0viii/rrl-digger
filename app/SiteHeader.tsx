@@ -43,13 +43,17 @@ export default function SiteHeader({
             />
           </svg>
           <div>
-            <h1
-              className={`u-display font-black leading-none tracking-tight ${
-                compact ? "text-xl" : "text-3xl"
-              }`}
-            >
-              Lee&apos;s Ranch
-            </h1>
+            {/* Only the home hero uses <h1> for the brand. On sub-pages the
+                page's own subject (e.g. the product name) is the sole <h1>. */}
+            {compact ? (
+              <span className="u-display block text-xl font-black leading-none tracking-tight">
+                Lee&apos;s Ranch
+              </span>
+            ) : (
+              <h1 className="u-display text-3xl font-black leading-none tracking-tight">
+                Lee&apos;s Ranch
+              </h1>
+            )}
             {!compact && (
               <span className="u-mono mt-1 block text-[10px] uppercase tracking-[0.32em] text-[#cf9f4a]">
                 Americana · RRL price radar

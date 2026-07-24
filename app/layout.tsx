@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Fraunces, Archivo, Spline_Sans_Mono } from "next/font/google";
 import { SITE } from "@/lib/site";
 import "./globals.css";
@@ -89,13 +90,21 @@ const jsonLd = {
       description:
         "RRL(Double RL) 해외 편집샵 원화 가격 비교 및 직구 관세·도착가 계산기.",
       inLanguage: "ko-KR",
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: SITE + "/?q={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
     {
       "@type": "Organization",
       "@id": SITE + "/#org",
       name: "Lee's Ranch",
       url: SITE + "/",
-      logo: SITE + "/icon.svg",
+      logo: SITE + "/icon.png",
     },
   ],
 };
@@ -116,11 +125,16 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Kutoku autolinker — turns outbound Cultizm/Stag links into affiliate links */}
-        <script
+        {/* Kutoku autolinker — rewrites outbound Cultizm/Stag links into
+            affiliate links. afterInteractive (not lazyOnload) so links are
+            rewritten right after hydration: it's revenue-critical that a buy
+            click lands on the affiliate URL, and this stays off the initial
+            render path either way. */}
+        <Script
           src="https://fdxtxguv.leesranch.com/0Bgsj1.js"
           data-kutoku-domain="fdxtxguv.leesranch.com"
           data-kutoku-id="0Bgsj1"
+          strategy="afterInteractive"
         />
       </body>
     </html>

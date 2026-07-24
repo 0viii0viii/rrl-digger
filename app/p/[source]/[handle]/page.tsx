@@ -7,6 +7,7 @@ import { SITE } from "@/lib/site";
 import {
   krw,
   native,
+  imgAt,
   matchKey,
   STORE_META,
   EXPORT_FACTOR,
@@ -67,6 +68,13 @@ export async function generateMetadata({
     p.price_krw,
   )}, 관세·부가세·배송 포함 예상 도착가까지 한눈에 비교하세요.`;
   const path = `/p/${p.source}/${p.handle}`;
+  // Resize for scrapers; omit width/height since the source aspect ratio isn't
+  // stored (product shots may be square or portrait) — a wrong dimension hint is
+  // worse than none. alt is the meaningful add.
+  const ogImg = imgAt(p.image_url, 1200);
+  const ogImages = ogImg
+    ? [{ url: ogImg, alt: `RRL ${name}` }]
+    : undefined;
 
   return {
     title,
@@ -77,13 +85,13 @@ export async function generateMetadata({
       url: SITE + path,
       title,
       description,
-      images: p.image_url ? [{ url: p.image_url }] : undefined,
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: p.image_url ? [p.image_url] : undefined,
+      images: ogImg ? [ogImg] : undefined,
     },
   };
 }
@@ -146,7 +154,7 @@ export default async function ProductPage({
       {
         "@type": "Product",
         name: `RRL ${name}`,
-        image: p.image_url ? [p.image_url] : undefined,
+        image: imgAt(p.image_url, 1200) ? [imgAt(p.image_url, 1200)] : undefined,
         brand: { "@type": "Brand", name: "RRL (Double RL)" },
         category: categorize(p.product_type),
         url: `${SITE}/p/${p.source}/${p.handle}`,
@@ -155,6 +163,7 @@ export default async function ProductPage({
           url: o.product_url,
           priceCurrency: "KRW",
           price: o.price_krw ?? undefined,
+          itemCondition: "https://schema.org/NewCondition",
           availability: o.available
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
@@ -194,8 +203,13 @@ export default async function ProductPage({
             {p.image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={p.image_url}
+                src={imgAt(p.image_url, 900)}
+                srcSet={`${imgAt(p.image_url, 500)} 500w, ${imgAt(p.image_url, 900)} 900w`}
+                sizes="(min-width:768px) 50vw, 100vw"
                 alt={p.title}
+                width={900}
+                height={900}
+                fetchPriority="high"
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -292,7 +306,7 @@ export default async function ProductPage({
             <a
               href={p.product_url}
               target="_blank"
-              rel="noopener noreferrer"
+              rel="sponsored nofollow noopener noreferrer"
               suppressHydrationWarning
               className="u-mono mt-5 flex items-center justify-center gap-2 border border-[var(--indigo)] bg-[var(--indigo)] px-5 py-3.5 text-sm font-bold uppercase tracking-wide text-[#f1e8d6] transition hover:bg-[var(--indigo-deep)]"
             >

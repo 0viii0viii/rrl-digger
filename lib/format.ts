@@ -3,6 +3,18 @@ export function krw(n: number | null | undefined): string {
   return "₩" + Math.round(n).toLocaleString("ko-KR");
 }
 
+// Shopify CDN originals are ~2000px / ~85KB, but cards render them at
+// ~180–280px. Requesting a resized variant (?width=) cuts ~90% of the bytes —
+// the single biggest mobile-transfer win. Non-Shopify URLs pass through.
+export function imgAt(
+  url: string | null | undefined,
+  width: number,
+): string | undefined {
+  if (!url) return undefined;
+  if (!url.includes("cdn.shopify.com")) return url;
+  return url + (url.includes("?") ? "&" : "?") + `width=${width}`;
+}
+
 export function native(n: number | null | undefined, cur: string): string {
   if (n == null) return "—";
   const sym =

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { type Product } from "@/lib/supabase";
 import {
   krw,
   native,
+  imgAt,
   matchKey,
   STORE_META,
   EXPORT_FACTOR,
@@ -50,7 +51,6 @@ export default function Explorer({
     const seen = new Set<string>(products.map((p) => p.source));
     return Object.keys(STORE_META).filter((s) => seen.has(s));
   }, [products]);
-  const [inStockOnly, setInStockOnly] = useState(true);
   const [onlyComparable, setOnlyComparable] = useState(false);
   const [sort, setSort] = useState<SortKey>("price_asc");
   const [coupon, setCoupon] = useState(0);
@@ -66,8 +66,12 @@ export default function Explorer({
   // homepage stays statically cached (no useSearchParams/Suspense, no dynamic
   // rendering) and the full grid is still present in the server HTML.
   useEffect(() => {
-    const c = new URLSearchParams(window.location.search).get("category");
+    const params = new URLSearchParams(window.location.search);
+    const c = params.get("category");
     if (c && (CATEGORIES as readonly string[]).includes(c)) setCategory(c);
+    // ?q= powers the WebSite SearchAction (sitelinks search box).
+    const query = params.get("q");
+    if (query) setQ(query);
   }, []);
   const [sizeQuery, setSizeQuery] = useState("");
   const [showAdv, setShowAdv] = useState(false);
@@ -104,7 +108,6 @@ export default function Explorer({
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     let list = products.filter((p) => {
-      if (inStockOnly && !p.available) return false;
       if (source !== "all" && p.source !== source) return false;
       if (gender !== "all" && genderOf(p.tags, p.title) !== gender) return false;
       if (category !== "all" && categorize(p.product_type) !== category)
@@ -129,7 +132,6 @@ export default function Explorer({
     gender,
     category,
     sizeQuery,
-    inStockOnly,
     onlyComparable,
     sort,
     comparableKeys,
@@ -162,14 +164,7 @@ export default function Explorer({
   }, [filtered.length]);
   const shown = filtered.slice(0, visible);
 
-  const stats = useMemo(
-    () => ({
-      total: products.length,
-      inStock: products.filter((p) => p.available).length,
-      comparable: comparableKeys.size,
-    }),
-    [products, comparableKeys],
-  );
+  const total = products.length;
 
   // Active-filter chips
   const chips: { label: string; onClear: () => void }[] = [];
@@ -192,8 +187,6 @@ export default function Explorer({
     chips.push({ label: `쿠폰 −${couponPct}%`, onClear: () => setCoupon(0) });
   if (onlyComparable)
     chips.push({ label: "여러 샵 취급", onClear: () => setOnlyComparable(false) });
-  if (!inStockOnly)
-    chips.push({ label: "품절 포함", onClear: () => setInStockOnly(true) });
 
   const advActive =
     gender !== "all" || !!sizeQuery.trim() || couponPct > 0 || onlyComparable;
@@ -206,7 +199,6 @@ export default function Explorer({
     setSizeQuery("");
     setCoupon(0);
     setOnlyComparable(false);
-    setInStockOnly(true);
   };
 
   const cats = ["all", ...CATEGORIES];
@@ -273,11 +265,6 @@ export default function Explorer({
               ["price_desc", "가격 높은순"],
               ["title", "이름순"],
             ]}
-          />
-          <Toggle
-            active={inStockOnly}
-            onClick={() => setInStockOnly((v) => !v)}
-            label="재고만"
           />
           <button
             onClick={() => setShowAdv((v) => !v)}
@@ -362,7 +349,7 @@ export default function Explorer({
       <div className="flex flex-wrap items-center gap-2 py-3 text-[13px]">
         <span className="u-mono text-[var(--ink)]">
           <b>{filtered.length.toLocaleString()}</b>
-          <span className="text-[var(--muted)]"> / {stats.inStock.toLocaleString()} 재고</span>
+          <span className="text-[var(--muted)]"> / {total.toLocaleString()} 재고</span>
         </span>
         {chips.map((c) => (
           <button
@@ -438,7 +425,7 @@ export default function Explorer({
   );
 }
 
-function Card({
+const Card = memo(function Card({
   p,
   index,
   comparable,
@@ -490,7 +477,10 @@ function Card({
     <a
       href={href}
       suppressHydrationWarning
-      {...(!p.handle && { target: "_blank", rel: "noopener noreferrer" })}
+      {...(!p.handle && {
+        target: "_blank",
+        rel: "sponsored nofollow noopener noreferrer",
+      })}
       className="rise group flex flex-col overflow-hidden rounded-none border border-[var(--line)] bg-[var(--card)] transition duration-200 hover:-translate-y-1 hover:border-[var(--line-strong)] hover:shadow-[0_12px_30px_-12px_rgba(40,30,15,0.4)]"
       style={{ animationDelay: `${Math.min(index, 22) * 28}ms` }}
     >
@@ -498,9 +488,15 @@ function Card({
         {p.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={p.image_url}
+            src={imgAt(p.image_url, 400)}
+            srcSet={`${imgAt(p.image_url, 300)} 300w, ${imgAt(p.image_url, 500)} 500w, ${imgAt(p.image_url, 760)} 760w`}
+            sizes="(min-width:1024px) 25vw, (min-width:640px) 33vw, 50vw"
             alt={p.title}
-            loading="lazy"
+            width={400}
+            height={400}
+            loading={index < 4 ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={index < 2 ? "high" : undefined}
             className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
           />
         ) : (
@@ -621,7 +617,7 @@ function Card({
       </div>
     </a>
   );
-}
+});
 
 function Select({
   value,
