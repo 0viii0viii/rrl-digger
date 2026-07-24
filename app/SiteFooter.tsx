@@ -1,4 +1,5 @@
 const NAV = [
+  ["/deals", "세일·최저가"],
   ["/about", "소개"],
   ["/shops", "편집샵 정보"],
   ["/guide/customs", "직구 관세 가이드"],

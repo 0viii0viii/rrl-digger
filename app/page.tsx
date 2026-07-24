@@ -33,6 +33,23 @@ export default async function Home() {
         lastUpdated={lastUpdated}
       />
 
+      <div className="mx-auto max-w-6xl px-5 pt-5">
+        <a
+          href="/deals"
+          className="group flex items-center justify-between gap-3 rounded-none border border-[var(--rust)]/40 bg-[var(--rust)]/[0.06] px-4 py-3 transition hover:border-[var(--rust)]"
+        >
+          <span className="text-[13px] leading-snug text-[var(--ink)] sm:text-sm">
+            <span className="u-mono mr-1.5 font-bold text-[var(--rust)]">
+              🔻 SALE
+            </span>
+            지금 <b>세일 중이거나 가격이 내려간</b> RRL만 모아봤어요
+          </span>
+          <span className="u-mono shrink-0 text-[11px] uppercase tracking-wide text-[var(--rust)] group-hover:underline">
+            보러가기 →
+          </span>
+        </a>
+      </div>
+
       <Explorer
         products={products}
         lastUpdated={lastUpdated}
